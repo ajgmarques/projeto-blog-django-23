@@ -156,6 +156,10 @@
     -webkit-appearance: none;
   }
   
+  img {
+    margin: 0 auto;
+  }
+  
   /* Blog */
   body,
   html,
@@ -314,7 +318,13 @@
   }
   
   /* Single Post */
-  .single-post-content {
+  .single-post-img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.single-post-content {
     padding-top: var(--spacing-smlst);
   }
   
@@ -322,7 +332,7 @@
   .single-post-excerpt {
     margin: 0;
   }
-  
+
   .single-post-excerpt {
     color: hsl(var(--clr-gray-base));
     font-size: var(--fs-bg);
