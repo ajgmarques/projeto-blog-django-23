@@ -1,14 +1,12 @@
 from typing import Any
 from django.db.models.query import QuerySet
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator
+from django.shortcuts import redirect
 from django.db.models import Q
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404
 from django.contrib.auth.models import User
-from django.views.generic import ListView  # class based view
+from django.views.generic import ListView, DetailView  # class based view
 from blog.models import Post, Page
 
-# posts = list(range(1000))  # para testar - ELIMINAR
 
 PER_PAGE = 9  # variável para definir quantos posts por página no paginator
 
@@ -19,7 +17,7 @@ class PostListView(ListView):
     template_name = 'blog/pages/index.html'
     context_object_name = 'posts'
     paginate_by = PER_PAGE
-    queryset = Post.objects.get_published()
+    queryset = Post.objects.get_published()  # type: ignore
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -30,51 +28,41 @@ class PostListView(ListView):
         return context
 
 
-def page(request, slug):
+class PageDetailView(DetailView):
+    model = Page
+    template_name = 'blog/pages/page.html'
+    slug_field = 'slug'
+    context_object_name = 'page'
 
-    page_obj = (
-        Page.objects
-        .filter(is_published=True)
-        .filter(slug=slug)
-        .first()
-    )
-
-    if page_obj is None:
-        raise Http404
-
-    page_title = f'{page_obj.title} - Página - '
-
-    return render(
-        request,
-        'blog/pages/page.html',
-        {
-            'page': page_obj,
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        page = self.get_object()
+        page_title = f'{page.title} - Página - '  # type: ignore
+        ctx.update({
             'page_title': page_title,
-        }
-    )
+        })
+        return ctx
+
+    def get_queryset(self) -> QuerySet[Any]:
+        return super().get_queryset().filter(is_published=True)
 
 
-def post(request, slug):
-    post_obj = (
-        Post.objects.get_published().filter(slug=slug).first()
-    )
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/pages/post.html'
+    context_object_name = 'post'
 
-    if post_obj is None:
-        raise Http404
-
-    page_title = f'{post_obj.title} - Post - '
-
-    return render(
-        request,
-        'blog/pages/post.html',
-        {
-            'post': post_obj,
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        post = self.get_object()
+        page_title = f'{post.title} - Página - '  # type: ignore
+        ctx.update({
             'page_title': page_title,
-        }
-    )
+        })
+        return ctx
+
+    def get_queryset(self) -> QuerySet[Any]:
+        return super().get_queryset().filter(is_published=True)
 
 
 class CreatedByListView(PostListView):
